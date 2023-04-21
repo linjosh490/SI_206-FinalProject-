@@ -105,18 +105,24 @@ def database_processing(data, latandlong):
 
 
 def calculate_average_aqi():
-    # Connect to the database and retrieve all AQI values
     conn = sqlite3.connect("air_quality.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT aqi FROM air_quality")
-    aqi_values = cursor.fetchall()
+    
+    latandlong = ("42.28", "-83.74")  # replace with your lat and long values
 
-    # Calculate the average AQI using the mean() function
+    # query the database to get the AQI values
+    cursor.execute("SELECT aqi FROM air_quality WHERE latitute = ? AND longitude = ?", latandlong)
+    results = cursor.fetchall()
+
+    # extract the AQI values into a list using list comprehension
+    aqi_values = [result[0] for result in results]
+
+    # calculate the average AQI
     average_aqi = sum(aqi_values) / len(aqi_values)
-
-    # Close the database connection and return the average AQI
+    
+    print("The average AQI is:", average_aqi)
+    
     conn.close()
-    return average_aqi
 
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
@@ -214,6 +220,8 @@ def main():
     database_processing(sydney_aqi, sydney_latandlong)
     database_processing(new_york_aqi, newyork_latandlong)
     database_processing(london_aqi, london_latandlong)
+
+    calculate_average_aqi()
 
 if __name__ == "__main__":
     main()
