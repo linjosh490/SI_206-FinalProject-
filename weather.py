@@ -19,7 +19,7 @@ def get_weather_info(api_data):
     else: 
         return('API request failed with status code', response.status_code)
 
-def create_db_table(table_name): 
+def create_db_table(db_name): 
     #Connects to the sqlite3 database
     conn = sqlite3.connect(table_name)
     curr = conn.cursor() 
@@ -31,7 +31,7 @@ def create_db_table(table_name):
                   visibility REAL, temperature_2m REAL)''')
 
 
-def database_processing(data, table_name):
+def database_processing(data, db_name):
     hours = {
         "2023-04-19T00:00": 0,
         "2023-04-19T01:00": 1,
@@ -60,7 +60,7 @@ def database_processing(data, table_name):
     }
 
     #Connect to sqlite3 database
-    conn = sqlite3.connect(table_name)
+    conn = sqlite3.connect(db_name)
     curr = conn.cursor() 
 
     #Get the information from the data json 
