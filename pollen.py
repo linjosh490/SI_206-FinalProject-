@@ -5,6 +5,15 @@ import datetime
 # API endpoint URL
 url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.354611&days=3&key=7ca2640fbc58462ea0698af01079813d'
 
+#auto-increment
+#organize data 
+
+#dictionary 
+#new longitude, latitude
+# key is number, lat& long is value
+
+
+
 # API parameters
 # params = {
 #     'latitude': 51.5072,
@@ -13,6 +22,10 @@ url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.
 #     'Features_List': 'types_information',
 #     'Number_of_Days': 5
 # }
+
+
+#for loop
+#auto increment
 
 # Make API request
 response = requests.get(url)
