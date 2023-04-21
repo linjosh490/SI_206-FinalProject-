@@ -5,6 +5,37 @@ import datetime
 # API endpoint URL
 url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.354611&days=3&key=7ca2640fbc58462ea0698af01079813d'
 
+#auto-increment
+#organize data 
+
+#dictionary 
+#new longitude, latitude
+# key is number, lat& long is value
+conn = sqlite3.connect('locations.db')
+cursor = conn.cursor()
+cursor.execute('''CREATE TABLE locations
+                  (location_id INTEGER PRIMARY KEY,
+                   latitude REAL,
+                   longitude REAL)''')
+
+# Insert the data into the locations table
+locations = {
+    0: (42.28, -83.74),  # Ann Arbor
+    1: (33.75, -117.83),  # Tustin, California
+    2: (47.61, -122.33),  # Seattle
+    3: (35.69, 139.69),  # Tokyo, Japan
+    4: (-33.87, 151.21),  # Sydney, Australia
+    5: (40.71, -74.01),  # New York
+    6: (51.51, -0.13)  # London, UK
+}
+
+for location_id, (latitude, longitude) in locations.items():
+    cursor.execute('''INSERT INTO locations (location_id, latitude, longitude) VALUES (?, ?, ?)''', (location_id, latitude, longitude))
+
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
+
 # API parameters
 # params = {
 #     'latitude': 51.5072,
@@ -13,6 +44,10 @@ url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.
 #     'Features_List': 'types_information',
 #     'Number_of_Days': 5
 # }
+
+
+#for loop
+#auto increment
 
 # Make API request
 response = requests.get(url)
