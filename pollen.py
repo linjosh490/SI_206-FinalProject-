@@ -27,10 +27,25 @@ def create_db_table(table_name):
     curr = conn.cursor() 
 
     curr.execute('''DROP TABLE IF EXISTS air_quality''')
-    curr.execute('''CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, hour_id INTEGER, aqi INTEGER, category_id INTEGER)''')
+    curr.execute('''CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, latitute REAL, longitude REAL, hour_id INTEGER, aqi INTEGER, category_id INTEGER)''')
 
 
-def database_processing(data):
+def getlatandlong(link): 
+    link = link[1:]
+    pairs = link.split("&")
+
+    # Loop through the list of pairs to find the latitude and longitude
+    for pair in pairs:
+        key, value = pair.split("=")
+        if key == "lat":
+            latitude = value
+        elif key == "lon":
+            longitude = value
+    
+    latandlong = (latitude, longitude)
+    return latandlong
+
+def database_processing(data, latandlong):
 # create the database and table
     conn = sqlite3.connect("air_quality.db")
     cursor = conn.cursor()
@@ -72,18 +87,36 @@ def database_processing(data):
         "2023-04-19T23:00:00Z": 23
     }
 
+
+
     for item in data["data"]:
         datetime = item["datetime"]
         hour_id = hours.get(datetime)
         aqi = item["indexes"]["baqi"]["aqi"]
         category = item["indexes"]["baqi"]["category"]
         category_id = categories.get(category)
-        cursor.execute("INSERT INTO air_quality (hour_id, aqi, category_id) VALUES (?, ?, ?)", (hour_id, aqi, category_id))
+        latitute = latandlong[0]
+        longitude = latandlong[1]
+        cursor.execute("INSERT INTO air_quality (latitute, longitude, hour_id, aqi, category_id) VALUES (?, ?, ?, ?, ?)", (latitute, longitude, hour_id, aqi, category_id))
 
     # commit changes and close the connection
     conn.commit()
     conn.close()
 
+
+def calculate_average_aqi():
+    # Connect to the database and retrieve all AQI values
+    conn = sqlite3.connect("air_quality.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT aqi FROM air_quality")
+    aqi_values = cursor.fetchall()
+
+    # Calculate the average AQI using the mean() function
+    average_aqi = sum(aqi_values) / len(aqi_values)
+
+    # Close the database connection and return the average AQI
+    conn.close()
+    return average_aqi
 
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
@@ -152,22 +185,35 @@ def main():
     # }
     
     ann_arbor_aqi = get_aqi_info("?lat=42.28&lon=-83.74&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    aa_latandlong = getlatandlong("?lat=42.28&lon=-83.74&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    #print(aa_latandlong)
     tustin_aqi = get_aqi_info("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    tustin_latandlong = getlatandlong("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+
     seattle_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    tokyo_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    sydney_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    new_york_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    london_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    seattle_latandlong = getlatandlong("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
+    tokyo_aqi = get_aqi_info("?lat=35.69&lon=139.69&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    tokyo_latandlong = getlatandlong("?lat=35.69&lon=139.69&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+
+    sydney_aqi = get_aqi_info("?lat=-33.87&lon=151.21&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    sydney_latandlong = getlatandlong("?lat=-33.87&lon=151.21&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+
+    new_york_aqi = get_aqi_info("?lat=40.71&lon=-74.01&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    newyork_latandlong = getlatandlong("?lat=-40.71&lon=-74.01&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+
+    london_aqi = get_aqi_info("?lat=51.51&lon=-0.13&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    london_latandlong = getlatandlong("?lat=51.51&lon=-0.13&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
 
     create_db_table("air_quality.db")
 
-    database_processing(ann_arbor_aqi)
-    database_processing(tustin_aqi)
-    database_processing(seattle_aqi)
-    database_processing(tokyo_aqi)
-    database_processing(sydney_aqi)
-    database_processing(new_york_aqi)
-    database_processing(london_aqi)
+    database_processing(ann_arbor_aqi, aa_latandlong)
+    database_processing(tustin_aqi, tustin_latandlong)
+    database_processing(seattle_aqi, seattle_latandlong)
+    database_processing(tokyo_aqi, tokyo_latandlong)
+    database_processing(sydney_aqi, sydney_latandlong)
+    database_processing(new_york_aqi, newyork_latandlong)
+    database_processing(london_aqi, london_latandlong)
 
 if __name__ == "__main__":
     main()
