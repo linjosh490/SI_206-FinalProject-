@@ -1,6 +1,7 @@
 import requests
 import sqlite3
 import datetime
+import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -108,6 +109,14 @@ def create_bar_graph(cities, list_of_items):
 
     plt.show()
 
+def write_csv(filename, handtlist, cities): 
+    with open(filename, 'w', newline = '') as file:
+        writer = csv.writer(file)
+        writer.writerow(['City', 'Latitude'])
+        for i in range(len(handtlist)):
+            writer.writerow(' '.join(cities[i]))
+            writer.writerow(handtlist[i])
+
 def main(): 
     ann_arbor_weather = get_weather_info("latitude=42.28&longitude=-83.74&hourly=temperature_2m,relativehumidity_2m,visibility,windspeed_120m&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=1&start_date=2023-04-19&end_date=2023-04-19&timezone=America%2FNew_York")
     tustin_weather = get_weather_info("latitude=33.75&longitude=-117.83&hourly=temperature_2m,relativehumidity_2m,visibility,windspeed_120m&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=1&start_date=2023-04-19&end_date=2023-04-19&timezone=America%2FNew_York")
@@ -158,6 +167,7 @@ def main():
     pollen_relations_list.append(london_pollen)
 
     cities = ['Ann Arbor, MI', 'Tustin, CA', 'Shanghai, China', 'Tokyo, Japan', 'Sydney, Australia', 'New York, NY', 'London, UK']
+    write_csv("write.csv", pollen_relations_list, cities)
     create_bar_graph(cities, pollen_relations_list)
     
 
