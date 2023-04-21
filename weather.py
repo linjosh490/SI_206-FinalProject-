@@ -114,7 +114,7 @@ def write_csv(filename, handtlist, cities):
         writer = csv.writer(file)
         writer.writerow(['City', 'Latitude'])
         for i in range(len(handtlist)):
-            writer.writerow(' '.join(cities[i]))
+            writer.writerow(cities[i])
             writer.writerow(handtlist[i])
 
 def main(): 
@@ -166,7 +166,7 @@ def main():
     pollen_relations_list.append(ny_pollen)
     pollen_relations_list.append(london_pollen)
 
-    cities = ['Ann Arbor, MI', 'Tustin, CA', 'Shanghai, China', 'Tokyo, Japan', 'Sydney, Australia', 'New York, NY', 'London, UK']
+    cities = ['Ann Arbor', 'Tustin', 'Shanghai', 'Tokyo', 'Sydney', 'New York', 'London']
     write_csv("write.csv", pollen_relations_list, cities)
     create_bar_graph(cities, pollen_relations_list)
     
