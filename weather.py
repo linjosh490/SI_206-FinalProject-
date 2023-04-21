@@ -21,7 +21,7 @@ def get_weather_info(api_data):
 
 def create_db_table(db_name): 
     #Connects to the sqlite3 database
-    conn = sqlite3.connect(table_name)
+    conn = sqlite3.connect(db_name)
     curr = conn.cursor() 
 
     #Creates a new table in the database 
@@ -82,7 +82,7 @@ def database_processing(data, db_name):
 
 
 def calculate_pollen_relations(lat, longi):
-    conn = sqlite3.connect('openmateo.db')
+    conn = sqlite3.connect('air_quality.db')
     curr = conn.cursor()
     curr.execute( '''SELECT 
                     strftime('%Y-%m-%d', hourly_time, 'unixepoch') AS day,
@@ -117,16 +117,28 @@ def main():
     new_york_weather = get_weather_info("latitude=40.71&longitude=-74.01&hourly=temperature_2m,relativehumidity_2m,visibility,windspeed_120m&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=1&start_date=2023-04-19&end_date=2023-04-19&timezone=America%2FNew_York")
     london_weather = get_weather_info("latitude=51.51&longitude=-0.13&hourly=temperature_2m,relativehumidity_2m,visibility,windspeed_120m&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=1&start_date=2023-04-19&end_date=2023-04-19&timezone=America%2FNew_York")
 
-    create_db_table("openmateo.db")
-    omdb = "openmateo.db"
+    # create_db_table("openmateo.db")
+    # omdb = "openmateo.db"
 
-    database_processing(ann_arbor_weather, omdb)
-    database_processing(tustin_weather, omdb)
-    database_processing(seattle_weather,omdb)
-    database_processing(tokyo_weather, omdb)
-    database_processing(sydney_weather, omdb)
-    database_processing(new_york_weather, omdb)
-    database_processing(london_weather, omdb)
+    create_db_table("air_quality.db")
+    aqdb = "air_quality.db"
+
+    database_processing(ann_arbor_weather, aqdb)
+    database_processing(tustin_weather, aqdb)
+    database_processing(seattle_weather,aqdb)
+    database_processing(tokyo_weather, aqdb)
+    database_processing(sydney_weather, aqdb)
+    database_processing(new_york_weather, aqdb)
+    database_processing(london_weather, aqdb)
+
+
+    # database_processing(ann_arbor_weather, omdb)
+    # database_processing(tustin_weather, omdb)
+    # database_processing(seattle_weather,omdb)
+    # database_processing(tokyo_weather, omdb)
+    # database_processing(sydney_weather, omdb)
+    # database_processing(new_york_weather, omdb)
+    # database_processing(london_weather, omdb)
 
     pollen_relations_list = []
     aa_pollen = calculate_pollen_relations(42.292328, -83.736755)
