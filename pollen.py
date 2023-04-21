@@ -2,21 +2,15 @@ import requests
 import sqlite3
 import datetime
 
-# API endpoint URL
-url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.354611&days=3&key=7ca2640fbc58462ea0698af01079813d'
 
 #auto-increment
 #organize data 
 
-#dictionary 
-#new longitude, latitude
+#dictionary: new longitude, latitude
 # key is number, lat& long is value
 conn = sqlite3.connect('locations.db')
 cursor = conn.cursor()
-cursor.execute('''CREATE TABLE locations
-                  (location_id INTEGER PRIMARY KEY,
-                   latitude REAL,
-                   longitude REAL)''')
+cursor.execute('''CREATE TABLE locations (location_id INTEGER PRIMARY KEY, latitude REAL, longitude REAL)''')
 
 # Insert the data into the locations table
 locations = {
@@ -32,7 +26,26 @@ locations = {
 for location_id, (latitude, longitude) in locations.items():
     cursor.execute('''INSERT INTO locations (location_id, latitude, longitude) VALUES (?, ?, ?)''', (location_id, latitude, longitude))
 
-# Commit the changes and close the connection
+conn.commit()
+conn.close()
+
+#paris, france
+url1 = 'https://api.breezometer.com/air-quality/v2/historical/hourly?lat=48.857456&lon=2.354611&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-20T02:00:00'
+response = requests.get(url1)
+data = response.json()['data']
+
+conn = sqlite3.connect('air_quality.db')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE air_quality (datetime text, aqi integer, category text, dominant_pollutant text)''')
+
+for entry in data:
+    datetime = entry['datetime']
+    aqi = entry['indexes']['baqi']['aqi']
+    category = entry['indexes']['baqi']['category']
+    dominant_pollutant = entry['indexes']['baqi']['dominant_pollutant']
+    c.execute("INSERT INTO air_quality VALUES (?, ?, ?, ?)", (datetime, aqi, category, dominant_pollutant))
+
 conn.commit()
 conn.close()
 
@@ -49,6 +62,8 @@ conn.close()
 #for loop
 #auto increment
 
+# API endpoint URL
+url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.354611&days=3&key=7ca2640fbc58462ea0698af01079813d'
 # Make API request
 response = requests.get(url)
 
