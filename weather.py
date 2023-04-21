@@ -52,12 +52,6 @@ def database_processing(data):
     conn.commit()
     conn.close()
 
-
-<<<<<<< HEAD
-  
-
-
-
 def main(): 
     #gets the weather info from designated area for the dates 4/17 - 4/21, EST time zone 
 
@@ -78,7 +72,6 @@ def main():
     sydney_weather = get_weather_info("latitude=-33.87&longitude=151.21&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max&temperature_unit=fahrenheit&start_date=2023-04-17&end_date=2023-04-21&timezone=America%2FNew_York")
     new_york_weather = get_weather_info("latitude=40.71&longitude=-74.01&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max&temperature_unit=fahrenheit&start_date=2023-04-17&end_date=2023-04-21&timezone=America%2FNew_York")
     london_weather = get_weather_info("latitude=51.51&longitude=-0.13&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max&temperature_unit=fahrenheit&start_date=2023-04-17&end_date=2023-04-21&timezone=America%2FNew_York")
-=======
 def calculate_pollen_relations(lat, longi):
     conn = sqlite3.connect('openmateo.db')
     curr = conn.cursor()
@@ -117,7 +110,6 @@ def main():
 
     create_db_table("openmateo.db")
     omdb = "openmateo.db"
->>>>>>> 3a1919791ac6551256bdb9665c709b43e68a7b5b
 
     create_db_table("openmateo.db")
 
