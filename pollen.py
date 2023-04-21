@@ -12,6 +12,15 @@ url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.
 #new longitude, latitude
 # key is number, lat& long is value
 
+locations = {
+    0: (42.28, -83.74),  # Ann Arbor
+    1: (33.75, -117.83),  # Tustin, California
+    2: (47.61, -122.33),  # Seattle
+    3: (35.69, 139.69),  # Tokyo, Japan
+    4: (-33.87, 151.21),  # Sydney, Australia
+    5: (40.71, -74.01),  # New York
+    6: (51.51, -0.13)  # London, UK
+}
 
 
 # API parameters
