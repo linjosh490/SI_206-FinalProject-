@@ -1,5 +1,6 @@
 import requests
 import sqlite3
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 #organize data 
 
 def get_aqi_info(api_data):
-    #the base url for the weather API 
+    #the base url for the air quality API 
     base_url = "https://api.breezometer.com/air-quality/v2/historical/hourly"
     api_url = base_url + api_data
 
@@ -46,7 +47,7 @@ def getlatandlong(link):
     return latandlong
 
 def database_processing(data, latandlong):
-# create the database and table
+    # create the database and table
     conn = sqlite3.connect("air_quality.db")
     cursor = conn.cursor()
 
@@ -87,8 +88,6 @@ def database_processing(data, latandlong):
         "2023-04-19T23:00:00Z": 23
     }
 
-
-
     for item in data["data"]:
         datetime = item["datetime"]
         hour_id = hours.get(datetime)
@@ -99,7 +98,6 @@ def database_processing(data, latandlong):
         longitude = latandlong[1]
         cursor.execute("INSERT INTO air_quality (latitude, longitude, hour_id, aqi, category_id) VALUES (?, ?, ?, ?, ?)", (latitude, longitude, hour_id, aqi, category_id))
 
-    # commit changes and close the connection
     conn.commit()
     conn.close()
 
@@ -117,18 +115,19 @@ def calculate_average_aqi(latitude, longitude):
 
     # calculate the average AQI
     average_aqi = sum(aqi_values) / len(aqi_values)
-
-    return average_aqi
-
     conn.close()
 
+    return average_aqi
+    
+
 def data_visual():
-    cities = ['Ann Arbor, MI', 'Tustin, CA', 'Seattle, WA', 'Tokyo, Japan', 'Sydney, Australia', 'New York, NY', 'London, UK']
-    aqi = [calculate_average_aqi(42.292328, -83.736755), calculate_average_aqi(33.752544, -117.81802), calculate_average_aqi(47.621212, -122.33498), calculate_average_aqi(35.7, 139.6875), calculate_average_aqi(-33.75, 151.125), calculate_average_aqi(40.710335, -73.99307), calculate_average_aqi(51.5, -0.120000124)]
+    cities = ['Ann Arbor, MI', 'Tustin, CA', 'Shanghai, China', 'Tokyo, Japan', 'Sydney, Australia', 'New York, NY', 'London, UK']
+    aqi = [calculate_average_aqi(42.292328, -83.736755), calculate_average_aqi(33.752544, -117.81802), calculate_average_aqi(31.2, 121.4375), calculate_average_aqi(35.7, 139.6875), calculate_average_aqi(-33.75, 151.125), calculate_average_aqi(40.710335, -73.99307), calculate_average_aqi(51.5, -0.120000124)]
 
     # Create a bar chart
     fig, ax = plt.subplots()
-    ax.bar(cities, aqi)
+    ax.bar(cities, aqi, color='green')
+    ax.grid(axis='y')
 
     # Set the title and axis labels
     ax.set_title('Average Air Quality Index by City')
@@ -145,16 +144,51 @@ def join_tables():
     cursor = conn.cursor()
 
     # Join the two tables using SQL query
-    query = '''SELECT air_quality.latitude, air_quality.longitude, weather_data.visibility, weather_data.temperature_2m, air_quality.aqi FROM weather_data INNER JOIN air_quality ON weather_data.lat = air_quality.latitude AND weather_data.long = air_quality.longitude AND weather_data.hourly_time = air_quality.hour_id '''
+    query = '''SELECT air_quality.latitude, air_quality.longitude, weather_data.visibility, weather_data.temperature_2m, weather_data.relativehumidity_2m, air_quality.aqi FROM weather_data INNER JOIN air_quality ON weather_data.lat = air_quality.latitude AND weather_data.long = air_quality.longitude AND weather_data.hourly_time = air_quality.hour_id '''
     result = cursor.execute(query).fetchall()
 
-    cursor.execute('''CREATE TABLE joined_table (latitude REAL, longitude REAL, visibility REAL, temperature_2m REAL, aqi INTEGER)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS joined_table (latitude REAL, longitude REAL, visibility REAL, temperature_2m REAL, relativehumidity_2m REAL, aqi INTEGER)''')
 
     # Insert the joined data into the new table
-    cursor.executemany('''INSERT INTO joined_table VALUES (?, ?, ?, ?, ?)''', result)
+    cursor.executemany('''INSERT INTO joined_table VALUES (?, ?, ?, ?, ?, ?)''', result)
 
     # Commit changes and close database connection
     conn.commit()
+    conn.close()
+
+def create_scatterplot():
+    # Connect to the database and create a cursor object
+    conn = sqlite3.connect('air_quality.db')
+    cursor = conn.cursor()
+
+    # Retrieve data from the joined table
+    cursor.execute('SELECT visibility, aqi FROM joined_table')
+    data = cursor.fetchall()
+
+    x = np.array([row[0] for row in data])
+    y = np.array([row[1] for row in data])
+
+    # Calculate the slope and intercept of the line of best fit
+    m, b = np.polyfit(x, y, 1)
+
+    # Create a scatterplot
+    plt.scatter(x, y, c='green')
+    plt.xlabel('Visibility')
+    plt.ylabel('Air Quality Index (AQI)')
+    plt.title('Relationship between AQI and Visibility')
+
+    # plt.xlim(0)
+    # plt.ylim(0)
+
+    # Plot the line of best fit
+    plt.plot(x, m*x+b, c='red')
+
+    # Show the correlation coefficient
+    corr_coef = np.corrcoef(x, y)[0,1]
+    plt.text(0.05, 0.9, f'Correlation coefficient: {corr_coef:.2f}', transform=plt.gca().transAxes)
+
+    plt.show()
+
     conn.close()
 
 #dictionary: new longitude, latitude
@@ -184,8 +218,6 @@ def join_tables():
 #auto increment
 
 def main(): 
-    #gets the weather info from designated area for the dates 4/17 - 4/21, EST time zone 
-
     # locations = {
     #     0: (42.28, -83.74),  # Ann Arbor
     #     1: (33.75, -117.83),  # Tustin, California
@@ -198,13 +230,12 @@ def main():
     
     ann_arbor_aqi = get_aqi_info("?lat=42.292328&lon=-83.736755&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     aa_latandlong = getlatandlong("?lat=42.292328&lon=-83.736755&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    #print(aa_latandlong)
     
     tustin_aqi = get_aqi_info("?lat=33.752544&lon=-117.81802&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     tustin_latandlong = getlatandlong("?lat=33.752544&lon=-117.81802&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     
-    seattle_aqi = get_aqi_info("?lat=47.621212&lon=-122.33498&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    seattle_latandlong = getlatandlong("?lat=47.621212&lon=-122.33498&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    shanghai_aqi = get_aqi_info("?lat=31.2&lon=121.4375&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    shanghai_latandlong = getlatandlong("?lat=31.2&lon=121.4375&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     
     tokyo_aqi = get_aqi_info("?lat=35.7&lon=139.6875&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     tokyo_latandlong = getlatandlong("?lat=35.7&lon=139.6875&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
@@ -223,7 +254,7 @@ def main():
 
     database_processing(ann_arbor_aqi, aa_latandlong)
     database_processing(tustin_aqi, tustin_latandlong)
-    database_processing(seattle_aqi, seattle_latandlong)
+    database_processing(shanghai_aqi, shanghai_latandlong)
     database_processing(tokyo_aqi, tokyo_latandlong)
     database_processing(sydney_aqi, sydney_latandlong)
     database_processing(new_york_aqi, newyork_latandlong)
@@ -233,8 +264,8 @@ def main():
     print(f"Ann Arbor's average aqi is {annarbor_avg_aqi}.")
     tustin_avg_aqi = calculate_average_aqi(33.752544, -117.81802)
     print(f"Tustin's average aqi is {tustin_avg_aqi}.")
-    seattle_avg_aqi = calculate_average_aqi(47.621212, -122.33498)
-    print(f"Seattle's average aqi is {seattle_avg_aqi}.")
+    shanghai_avg_aqi = calculate_average_aqi(31.2, 121.4375) 
+    print(f"Shanghai's average aqi is {shanghai_avg_aqi}.")
     tokyo_avg_aqi = calculate_average_aqi(35.7, 139.6875)
     print(f"Tokyo's average aqi is {tokyo_avg_aqi}.")
     syney_avg_aqi = calculate_average_aqi(-33.75, 151.125)
@@ -247,6 +278,8 @@ def main():
     data_visual()
 
     join_tables()
+
+    create_scatterplot()
 
 
 if __name__ == "__main__":
