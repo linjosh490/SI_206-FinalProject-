@@ -4,9 +4,6 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-#this gets the weather information that we want
-
 def get_weather_info(api_data):
     #the base url for the weather API 
     base_url = "https://api.open-meteo.com/v1/forecast?"
@@ -20,7 +17,7 @@ def get_weather_info(api_data):
         return data
 
     else: 
-        print('API request failed with status code', response.status_code)
+        return('API request failed with status code', response.status_code)
 
 def create_db_table(table_name): 
     #Connects to the sqlite3 database
