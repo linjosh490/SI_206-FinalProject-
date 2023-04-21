@@ -1,11 +1,8 @@
 import requests
 import sqlite3
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-#auto-increment
-#organize data 
 
 def get_aqi_info(api_data):
     #the base url for the air quality API 
@@ -191,6 +188,28 @@ def create_scatterplot():
 
     conn.close()
 
+
+def write_csv():
+    # Create a list of tuples containing the city name, latitude, longitude, and AQI
+    cities = [('Ann Arbor', 42.292328, -83.736755, calculate_average_aqi(42.292328, -83.736755)),
+            ('Tustin', 33.752544, -117.81802, calculate_average_aqi(33.752544, -117.81802)),
+            ('Shanghai', 31.2, 121.4375, calculate_average_aqi(31.2, 121.4375)),
+            ('Tokyo', 35.7, 139.6875, calculate_average_aqi(35.7, 139.6875)),
+            ('Sydney', -33.75, 151.125, calculate_average_aqi(-33.75, 151.125)),
+            ('New York', 40.710335, -73.99307, calculate_average_aqi(40.710335, -73.99307)),
+            ('London', 51.5, -0.120000124, calculate_average_aqi(51.5, -0.120000124))]
+
+    # Open a file for writing and create a CSV writer object
+    with open('city_data.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+
+        # Write the header row
+        writer.writerow(['City', 'Latitude', 'Longitude', 'AQI'])
+
+        # Write the data for each city
+        for city in cities:
+            writer.writerow(city)
+
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
 # conn = sqlite3.connect('locations.db')
@@ -280,6 +299,9 @@ def main():
     join_tables()
 
     create_scatterplot()
+
+    #write data into a file
+    write_csv()
 
 
 if __name__ == "__main__":
