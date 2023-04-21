@@ -138,6 +138,37 @@ def data_visual():
     # Display the chart
     plt.show()
 
+
+
+def join_tables():
+    db1 = sqlite3.connect('openmateo.db')
+    cursor1 = db1.cursor()
+
+    # Connect to the second database and create a cursor object
+    db2 = sqlite3.connect('air_quality.db')
+    cursor2 = db2.cursor()
+
+    # Retrieve data from the first table using SQL query
+    cursor1.execute('SELECT * FROM weather_data')
+    data1 = cursor1.fetchall()
+
+    # Retrieve data from the second table using SQL query
+    cursor2.execute('SELECT * FROM air_quality')
+    data2 = cursor2.fetchall()
+
+    # Join the two tables using SQL query
+    joined_data = cursor1.execute('SELECT * FROM weather_data INNER JOIN air_quality ON weather_data.lat = air_quality.latitude AND weather_data.long = air_quality.longitude AND weather_data.hourly_time = air_quality.hour_id')
+
+    # Store the joined data in a new table in the first database using SQL insert statement
+    cursor1.execute('CREATE TABLE evironment_table (REAL latitude, REAL longitude, REAL visibility, )')
+    cursor1.executemany('INSERT INTO joined_table VALUES (?, ?, ...)', joined_data)
+
+    # Commit changes and close database connections
+    db1.commit()
+    db2.commit()
+    db1.close()
+    db2.close()
+
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
 conn = sqlite3.connect('locations.db')
@@ -227,8 +258,6 @@ def main():
 
     data_visual()
 
-
-    
 
 if __name__ == "__main__":
     main()
