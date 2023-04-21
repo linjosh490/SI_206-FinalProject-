@@ -1,6 +1,6 @@
 import requests
 import sqlite3
-import datetime
+import matplotlib.pyplot as plt
 
 
 #auto-increment
@@ -104,14 +104,12 @@ def database_processing(data, latandlong):
     conn.close()
 
 
-def calculate_average_aqi():
+def calculate_average_aqi(latitude, longitude):
     conn = sqlite3.connect("air_quality.db")
     cursor = conn.cursor()
-    
-    latandlong = ("42.28", "-83.74")  # replace with your lat and long values
 
     # query the database to get the AQI values
-    cursor.execute("SELECT aqi FROM air_quality WHERE latitute = ? AND longitude = ?", latandlong)
+    cursor.execute("SELECT aqi FROM air_quality WHERE latitute = ? AND longitude = ?", (latitude, longitude))
     results = cursor.fetchall()
 
     # extract the AQI values into a list using list comprehension
@@ -119,10 +117,26 @@ def calculate_average_aqi():
 
     # calculate the average AQI
     average_aqi = sum(aqi_values) / len(aqi_values)
-    
-    print("The average AQI is:", average_aqi)
-    
+
+    return average_aqi
+
     conn.close()
+
+def data_visual():
+    cities = ['Ann Arbor, MI', 'Tustin, CA', 'Seattle, WA', 'Tokyo, Japan', 'Sydney, Australia', 'New York, NY', 'London, UK']
+    aqi = [calculate_average_aqi(42.292328, -83.736755), calculate_average_aqi(33.752544, -117.81802), calculate_average_aqi(47.621212, -122.33498), calculate_average_aqi(35.7, 139.6875), calculate_average_aqi(-33.75, 151.125), calculate_average_aqi(40.710335, -73.99307), calculate_average_aqi(51.5, -0.120000124)]
+
+    # Create a bar chart
+    fig, ax = plt.subplots()
+    ax.bar(cities, aqi)
+
+    # Set the title and axis labels
+    ax.set_title('Average Air Quality Index by City')
+    ax.set_xlabel('City')
+    ax.set_ylabel('Air Quality Index')
+
+    # Display the chart
+    plt.show()
 
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
@@ -146,33 +160,6 @@ for location_id, (latitude, longitude) in locations.items():
 
 conn.commit()
 conn.close()
-# url1 = 'https://api.breezometer.com/air-quality/v2/historical/hourly?lat=48.857456&lon=2.354611&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-20T02:00:00'
-# response = requests.get(url1)
-# data = response.json()['data']
-
-# conn = sqlite3.connect('air_quality.db')
-# c = conn.cursor()
-
-# c.execute('''CREATE TABLE air_quality (datetime text, aqi integer, category text)''')
-
-# for entry in data:
-#     datetime = entry['datetime']
-#     aqi = entry['indexes']['baqi']['aqi']
-#     category = entry['indexes']['baqi']['category']
-#     c.execute("INSERT INTO air_quality VALUES (?, ?, ?)", (datetime, aqi, category))
-
-# conn.commit()
-# conn.close()
-
-# API parameters
-# params = {
-#     'latitude': 51.5072,
-#     'longitude': 0.1276,
-#     'YOUR_API_KEY': '7ca2640fbc58462ea0698af01079813d',
-#     'Features_List': 'types_information',
-#     'Number_of_Days': 5
-# }
-
 
 #for loop
 #auto increment
@@ -190,26 +177,28 @@ def main():
     #     6: (51.51, -0.13)  # London, UK
     # }
     
-    ann_arbor_aqi = get_aqi_info("?lat=42.28&lon=-83.74&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    aa_latandlong = getlatandlong("?lat=42.28&lon=-83.74&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    ann_arbor_aqi = get_aqi_info("?lat=42.292328&lon=-83.736755&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    aa_latandlong = getlatandlong("?lat=42.292328&lon=-83.736755&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     #print(aa_latandlong)
-    tustin_aqi = get_aqi_info("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    tustin_latandlong = getlatandlong("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-
-    seattle_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    seattle_latandlong = getlatandlong("?lat=33.75&lon=-117.83&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     
-    tokyo_aqi = get_aqi_info("?lat=35.69&lon=139.69&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    tokyo_latandlong = getlatandlong("?lat=35.69&lon=139.69&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-
-    sydney_aqi = get_aqi_info("?lat=-33.87&lon=151.21&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    sydney_latandlong = getlatandlong("?lat=-33.87&lon=151.21&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-
-    new_york_aqi = get_aqi_info("?lat=40.71&lon=-74.01&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    newyork_latandlong = getlatandlong("?lat=-40.71&lon=-74.01&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-
-    london_aqi = get_aqi_info("?lat=51.51&lon=-0.13&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
-    london_latandlong = getlatandlong("?lat=51.51&lon=-0.13&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    tustin_aqi = get_aqi_info("?lat=33.752544&lon=-117.81802&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    tustin_latandlong = getlatandlong("?lat=33.752544&lon=-117.81802&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
+    seattle_aqi = get_aqi_info("?lat=47.621212&lon=-122.33498&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    seattle_latandlong = getlatandlong("?lat=47.621212&lon=-122.33498&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
+    tokyo_aqi = get_aqi_info("?lat=35.7&lon=139.6875&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    tokyo_latandlong = getlatandlong("?lat=35.7&lon=139.6875&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
+    sydney_aqi = get_aqi_info("?lat=-33.75&lon=151.125&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    sydney_latandlong = getlatandlong("?lat=-33.75&lon=151.125&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+   
+    new_york_aqi = get_aqi_info("?lat=40.710335&lon=-73.99307&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    newyork_latandlong = getlatandlong("?lat=40.710335&lon=-73.99307&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
+    london_aqi = get_aqi_info("?lat=51.5&lon=-0.120000124&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    london_latandlong = getlatandlong("?lat=51.5&lon=-0.120000124&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
+    
 
     create_db_table("air_quality.db")
 
@@ -221,7 +210,25 @@ def main():
     database_processing(new_york_aqi, newyork_latandlong)
     database_processing(london_aqi, london_latandlong)
 
-    calculate_average_aqi()
+    annarbor_avg_aqi = calculate_average_aqi(42.292328, -83.736755)
+    print(f"Ann Arbor's average aqi is {annarbor_avg_aqi}.")
+    tustin_avg_aqi = calculate_average_aqi(33.752544, -117.81802)
+    print(f"Tustin's average aqi is {tustin_avg_aqi}.")
+    seattle_avg_aqi = calculate_average_aqi(47.621212, -122.33498)
+    print(f"Seattle's average aqi is {seattle_avg_aqi}.")
+    tokyo_avg_aqi = calculate_average_aqi(35.7, 139.6875)
+    print(f"Tokyo's average aqi is {tokyo_avg_aqi}.")
+    syney_avg_aqi = calculate_average_aqi(-33.75, 151.125)
+    print(f"Sydney's average aqi is {syney_avg_aqi}.")
+    newyork_avg_aqi = calculate_average_aqi(40.710335, -73.99307)
+    print(f"New York's average aqi is {newyork_avg_aqi}.")
+    london_avg_aqi = calculate_average_aqi(51.5, -0.120000124)
+    print(f"London's average aqi is {london_avg_aqi}.")
+
+    data_visual()
+
+
+    
 
 if __name__ == "__main__":
     main()
