@@ -27,7 +27,7 @@ def create_db_table(table_name):
     curr = conn.cursor() 
 
     curr.execute('''DROP TABLE IF EXISTS air_quality''')
-    curr.execute('''CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, latitute REAL, longitude REAL, hour_id INTEGER, aqi INTEGER, category_id INTEGER)''')
+    curr.execute('''CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, latitude REAL, longitude REAL, hour_id INTEGER, aqi INTEGER, category_id INTEGER)''')
 
 
 def getlatandlong(link): 
@@ -95,9 +95,9 @@ def database_processing(data, latandlong):
         aqi = item["indexes"]["baqi"]["aqi"]
         category = item["indexes"]["baqi"]["category"]
         category_id = categories.get(category)
-        latitute = latandlong[0]
+        latitude = latandlong[0]
         longitude = latandlong[1]
-        cursor.execute("INSERT INTO air_quality (latitute, longitude, hour_id, aqi, category_id) VALUES (?, ?, ?, ?, ?)", (latitute, longitude, hour_id, aqi, category_id))
+        cursor.execute("INSERT INTO air_quality (latitude, longitude, hour_id, aqi, category_id) VALUES (?, ?, ?, ?, ?)", (latitude, longitude, hour_id, aqi, category_id))
 
     # commit changes and close the connection
     conn.commit()
@@ -109,7 +109,7 @@ def calculate_average_aqi(latitude, longitude):
     cursor = conn.cursor()
 
     # query the database to get the AQI values
-    cursor.execute("SELECT aqi FROM air_quality WHERE latitute = ? AND longitude = ?", (latitude, longitude))
+    cursor.execute("SELECT aqi FROM air_quality WHERE latitude = ? AND longitude = ?", (latitude, longitude))
     results = cursor.fetchall()
 
     # extract the AQI values into a list using list comprehension
@@ -141,56 +141,44 @@ def data_visual():
 
 
 def join_tables():
-    db1 = sqlite3.connect('openmateo.db')
-    cursor1 = db1.cursor()
-
-    # Connect to the second database and create a cursor object
-    db2 = sqlite3.connect('air_quality.db')
-    cursor2 = db2.cursor()
-
-    # Retrieve data from the first table using SQL query
-    cursor1.execute('SELECT * FROM weather_data')
-    data1 = cursor1.fetchall()
-
-    # Retrieve data from the second table using SQL query
-    cursor2.execute('SELECT * FROM air_quality')
-    data2 = cursor2.fetchall()
+    conn = sqlite3.connect('air_quality.db')
+    cursor = conn.cursor()
 
     # Join the two tables using SQL query
-    joined_data = cursor1.execute('SELECT * FROM weather_data INNER JOIN air_quality ON weather_data.lat = air_quality.latitude AND weather_data.long = air_quality.longitude AND weather_data.hourly_time = air_quality.hour_id')
+    query = '''SELECT air_quality.latitude, air_quality.longitude, weather_data.visibility, weather_data.temperature_2m, air_quality.aqi FROM weather_data INNER JOIN air_quality ON weather_data.lat = air_quality.latitude AND weather_data.long = air_quality.longitude AND weather_data.hourly_time = air_quality.hour_id '''
+    result = cursor.execute(query).fetchall()
 
-    # Store the joined data in a new table in the first database using SQL insert statement
-    cursor1.execute('CREATE TABLE evironment_table (REAL latitude, REAL longitude, REAL visibility, )')
-    cursor1.executemany('INSERT INTO joined_table VALUES (?, ?, ...)', joined_data)
+    cursor.execute('''CREATE TABLE joined_table (latitude REAL, longitude REAL, visibility REAL, temperature_2m REAL, aqi INTEGER)''')
 
-    # Commit changes and close database connections
-    db1.commit()
-    db2.commit()
-    db1.close()
-    db2.close()
+    # Insert the joined data into the new table
+    cursor.executemany('''INSERT INTO joined_table VALUES (?, ?, ?, ?, ?)''', result)
+
+    # Commit changes and close database connection
+    conn.commit()
+    conn.close()
 
 #dictionary: new longitude, latitude
 # key is number, lat& long is value
-conn = sqlite3.connect('locations.db')
-cursor = conn.cursor()
-cursor.execute('''CREATE TABLE locations (location_id INTEGER PRIMARY KEY, latitude REAL, longitude REAL)''')
+# conn = sqlite3.connect('locations.db')
+# cursor = conn.cursor()
+# cursor.execute('''CREATE TABLE locations (location_id INTEGER PRIMARY KEY, latitude REAL, longitude REAL)''')
 
-# Insert the data into the locations table
-locations = {
-    0: (42.28, -83.74),  # Ann Arbor, Michigan
-    1: (33.75, -117.83),  # Tustin, California
-    2: (47.61, -122.33),  # Seattle, Washington
-    3: (35.69, 139.69),  # Tokyo, Japan
-    4: (-33.87, 151.21),  # Sydney, Australia
-    5: (40.71, -74.01),  # New York
-    6: (51.51, -0.13)  # London, UK
-}
+# # Insert the data into the locations table
+# locations = {
+#     0: (42.28, -83.74),  # Ann Arbor, Michigan
+#     1: (33.75, -117.83),  # Tustin, California
+#     2: (47.61, -122.33),  # Seattle, Washington
+#     3: (35.69, 139.69),  # Tokyo, Japan
+#     4: (-33.87, 151.21),  # Sydney, Australia
+#     5: (40.71, -74.01),  # New York
+#     6: (51.51, -0.13)  # London, UK
+# }
 
-for location_id, (latitude, longitude) in locations.items():
-    cursor.execute('''INSERT INTO locations (location_id, latitude, longitude) VALUES (?, ?, ?)''', (location_id, latitude, longitude))
+# for location_id, (latitude, longitude) in locations.items():
+#     cursor.execute('''INSERT INTO locations (location_id, latitude, longitude) VALUES (?, ?, ?)''', (location_id, latitude, longitude))
 
-conn.commit()
-conn.close()
+# conn.commit()
+# conn.close()
 
 #for loop
 #auto increment
@@ -257,6 +245,8 @@ def main():
     print(f"London's average aqi is {london_avg_aqi}.")
 
     data_visual()
+
+    join_tables()
 
 
 if __name__ == "__main__":
