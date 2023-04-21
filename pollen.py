@@ -11,7 +11,14 @@ url = 'https://api.breezometer.com/pollen/v2/forecast/daily?lat=48.857456&lon=2.
 #dictionary 
 #new longitude, latitude
 # key is number, lat& long is value
+conn = sqlite3.connect('locations.db')
+cursor = conn.cursor()
+cursor.execute('''CREATE TABLE locations
+                  (location_id INTEGER PRIMARY KEY,
+                   latitude REAL,
+                   longitude REAL)''')
 
+# Insert the data into the locations table
 locations = {
     0: (42.28, -83.74),  # Ann Arbor
     1: (33.75, -117.83),  # Tustin, California
@@ -22,6 +29,12 @@ locations = {
     6: (51.51, -0.13)  # London, UK
 }
 
+for location_id, (latitude, longitude) in locations.items():
+    cursor.execute('''INSERT INTO locations (location_id, latitude, longitude) VALUES (?, ?, ?)''', (location_id, latitude, longitude))
+
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
 
 # API parameters
 # params = {
