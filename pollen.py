@@ -29,23 +29,11 @@ def create_db_table(table_name):
     curr.execute('''DROP TABLE IF EXISTS air_quality''')
     curr.execute('''CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, hour_id INTEGER, aqi INTEGER, category_id INTEGER)''')
 
-#paris, france
-# make the request to the API
-url = "https://api.breezometer.com/air-quality/v2/historical/hourly"
-params = {
-    "lat": 42.28,
-    "lon": -83.74,
-    "key": "7ca2640fbc58462ea0698af01079813d",
-    "start_datetime": "2023-04-19T00:00:00",
-    "end_datetime": "2023-04-20T00:00:00"
-}
-response = requests.get(url, params=params)
 
 def database_processing(data):
 # create the database and table
     conn = sqlite3.connect("air_quality.db")
     cursor = conn.cursor()
-    #cursor.execute("CREATE TABLE IF NOT EXISTS air_quality (id INTEGER PRIMARY KEY, hour_id INTEGER, aqi INTEGER, category_id INTEGER)")
 
     # insert the categories as an id into the table
     categories = {
@@ -84,7 +72,7 @@ def database_processing(data):
         "2023-04-19T23:00:00Z": 23
     }
 
-    for item in response.json()["data"]:
+    for item in data["data"]:
         datetime = item["datetime"]
         hour_id = hours.get(datetime)
         aqi = item["indexes"]["baqi"]["aqi"]
@@ -171,7 +159,7 @@ def main():
     new_york_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
     london_aqi = get_aqi_info("?lat=47.61&lon=-122.33&key=7ca2640fbc58462ea0698af01079813d&start_datetime=2023-04-19T00:00:00&end_datetime=2023-04-19T23:00:00")
 
-    create_db_table("openmateo.db")
+    create_db_table("air_quality.db")
 
     database_processing(ann_arbor_aqi)
     database_processing(tustin_aqi)
