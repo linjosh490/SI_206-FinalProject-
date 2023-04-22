@@ -140,14 +140,6 @@ def main():
     database_processing(london_weather, aqdb)
 
 
-    # database_processing(ann_arbor_weather, omdb)
-    # database_processing(tustin_weather, omdb)
-    # database_processing(shanghai_weather,omdb)
-    # database_processing(tokyo_weather, omdb)
-    # database_processing(sydney_weather, omdb)
-    # database_processing(new_york_weather, omdb)
-    # database_processing(london_weather, omdb)
-
     pollen_relations_list = []
     aa_pollen = calculate_pollen_relations(42.292328, -83.736755)
     tustin_pollen = calculate_pollen_relations(33.752544, -117.81802)
