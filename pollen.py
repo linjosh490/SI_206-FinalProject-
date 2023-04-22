@@ -188,6 +188,41 @@ def create_scatterplot():
 
     conn.close()
 
+def create_scatterplot_two():
+    # Connect to the database and create a cursor object
+    conn = sqlite3.connect('air_quality.db')
+    cursor = conn.cursor()
+
+    # Retrieve data from the joined table
+    cursor.execute('SELECT temperature_2m, aqi FROM joined_table')
+    data = cursor.fetchall()
+
+    x = np.array([row[0] for row in data])
+    y = np.array([row[1] for row in data])
+
+    # Calculate the slope and intercept of the line of best fit
+    m, b = np.polyfit(x, y, 1)
+
+    # Create a scatterplot
+    plt.scatter(x, y, c='magenta')
+    plt.xlabel('Temperature')
+    plt.ylabel('Air Quality Index (AQI)')
+    plt.title('Relationship between AQI and Temperature')
+
+    # plt.xlim(0)
+    # plt.ylim(0)
+
+    # Plot the line of best fit
+    plt.plot(x, m*x+b, c='yellow')
+
+    # Show the correlation coefficient
+    corr_coef = np.corrcoef(x, y)[0,1]
+    plt.text(0.05, 0.9, f'Correlation coefficient: {corr_coef:.2f}', transform=plt.gca().transAxes)
+
+    plt.show()
+
+    conn.close()
+
 
 def write_csv():
     # Create a list of tuples containing the city name, latitude, longitude, and AQI
@@ -299,6 +334,8 @@ def main():
     join_tables()
 
     create_scatterplot()
+
+    create_scatterplot_two()
 
     #write data into a file
     write_csv()
